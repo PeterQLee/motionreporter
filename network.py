@@ -18,19 +18,22 @@ class Server(threading.Thread):
         port=s.getsockname()[1]
         s.close()
         return port
+    
+    #Assuming Azure port is already configured
+    
     def serve(self):
         #delegates ports for communication as well as desired sensitvity
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.bind((socket.gethostname(),self.handleport))
         while True:
             (sendsock,address)=s.accept()
-
+            
             #check if it is an azure thing too
-            if address==self.azureaddress:
-                aid=sendsock.recv(4)
-                self.commclass.addAzureID(aid)
+            #if address==self.azureaddress:
+            #    aid=sendsock.recv(4)
+            #    self.commclass.addAzureID(aid)
                 #get and add sensitvity value
-                sendsock.close()
+            #xs    sendsock.close()
                 
                 
             #do authentication yadda yadda

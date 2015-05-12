@@ -1,39 +1,71 @@
 import cv2
 import threading
-from network import *
+from network2 import *
 import sys
 from detection import *
+from mailer import *
+import time
+#import Queue
 class Main:
     LANintense={}
     Azureintense={}
     
+    #intensities={}
     def __init__(self,azureip,azureport,password,handleport,debugflag=False,camnum=0):
         self.azureip=azureip
         self.azureport=azureport
         self.debugflag=debugflag
         self.devnum=camnum
-        #self.commclass=Communications(azureip,azureport)
+        self.cooldowns=[]
+        self.cooladdr=[]
+        
+        #selfcommclass=Communications(azureip,azureport)
+        self.azcomm=AzureComm(self,handleport,azureip,azureport,password)
+        
+        self.LANcomm=LANComm(self,handleport,password) #need to make handleports different
+        
+        try:
+            self.azcomm.validateNode()
+        except:
+            
+            print("Could not validate node on azure")
+            raise
+        self.azcomm.start()
+        self.LANcomm.start()
+        #start two new thread, addnewuser and 
+        
         #self.servclass=Server(self,self.commclass,handleport,azureip,azureport,password)
 
         #start server
         #self.servclass.serve()
-        self.LANintense["ayy@lmao.com"]=5
+        #self.intensities["ayy@lmao.com"]=5
+
+    #def addAddress(addres,intens):
+    #    if not addres in self.intensities:
+    #        self.intensities[addres]=intens
+    #    else:
+    #        print("address "+addres+" already exists")
     def addAzure(aid,intens):
-        if not self.Azureintense[aid]:
-            self.Azureintense[aid]=intens
-        else:
-            print("aid already exists!")
+        #will either update, or create address with intense
+        self.Azureintense[aid]=intens
+        
+        #if not self.Azureintense[aid]:
+        #    self.Azureintense[aid]=intens
+        #else:
+        #    print("aid already exists!")
 
     def addLAN(address,intens):
-        if not self.LANintense[address]:
-            self.LANintense[address]=intens
-        else:
-            print("LAN address already exists!")
+    #    if not self.LANintense[address]:
+         self.LANintense[address]=intens
+    #    else:
+    #        print("LAN address already exists!")
     
-    def removeAzure(self,aid):
-        if self.Azureintense[aid]:del self.Azureintense[aid]
-    def removeLAN(self,address):
-        if self.LANintense[aid]:del self.LANintense[aid]
+    def removeAddress(self,address):
+        if address in self.intensities:del self.intensities[address]
+    #def removeAzure(self,aid):
+    #    if self.Azureintense[aid]:del self.Azureintense[aid]
+    #def removeLAN(self,address):
+    #    if self.LANintense[aid]:del self.LANintense[aid]
     
     def captureMotion(self):
         try:
@@ -60,22 +92,41 @@ class Main:
                 #meanlapse=
                 print(meanconst)
                 
-                for i in self.LANintense:
-                    if self. LANintense[i]<=meanconst[0]: #these will be scaled by something ofcourse
+                for i in self.LANintense:#LANintense:
+                    if self.LANintense[i]<=meanconst[0] and i not in cooladdr: #these will be scaled by something ofcourse
                         #start a new thread for this, so it doesn't clog GUI
-                        #self.commclass.sendLANAlert(i)
+                        #self.LANcomm.sendLANAlert(i)
+                        
+                        #self.cooldown.append(time.time())#+5 minutes
+                        self.cooladdr.append(i)
+                        threading.Timer(300,removeCooldown,(cooladdr)).start()
+                        #send email
                         print("BREAK IN IN PROCESS!")
-                """
+                
                 for i in self.Azureintense:
-                    if self.Azureintense[i]<=meanconst: #these will be scaled by something ofcourse
+                    if self.Azureintense[i]<=meanconst and i not in cooladdr: #these will be scaled by something ofcourse
+
+                        
                         #start a new thread for this, so it doesn't clog GUI
-                        self.commclass.sendAzureAlert(i)
-                """
+
+                        #make sure ample time after detection
+                        #also make sure email hasn't been sent in last 5 minutes 
+                        
+                        self.azcomm.sendAlert(i)
+                        #send email
+                        #self.cooldown.append(time.time())#+5 minutes deprecated
+                        self.cooladdr.append(i)
+                        threading.Timer(300,removeCooldown,(cooladdr)).start()
+                        print("BREAK IN IN PROGRESS")
+                
                 if self.debugflag:
                     cv2.imshow('frame',disp)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
-
+            cam.release()
+            cv2.destroyAllWindows()
+            #self.azcomm.kill()
+            self.LANcomm.kill()
                         
             #if 
         except:
@@ -84,8 +135,23 @@ class Main:
             cam.release()
             cv2.destroyAllWindows()
             raise
+    def removeCooldown(self,addr):
+        #multithreaded, handles Queue for when to send emails
+        #once current time is 5 minutes past expirey, remove time index as well as respective cooladdr
+        cooladdr.remove(addr)
+        
 #initialize main
+#if (len(sys.argv)<5):
+#    print( "Usage: python3 main.py azureip azureport handleport,cameranumber")
+#else:    
 passw=input("Enter your desired password:")
+    #instead of using args, read from config file
+f=open("settings","r")
+ars=f.read()
+
+ars=ars.split(",")
+print(ars)
 print(sys.argv)
-m=Main(sys.argv[1],int(sys.argv[2]),passw,sys.argv[3],True,int(sys.argv[4]))
+#m=Main(sys.argv[1],int(sys.argv[2]),passw,sys.argv[3],True,int(sys.argv[4]))
+m=Main(ars[0],int(ars[1]),passw,ars[2],True,int(ars[3]))
 m.captureMotion()
