@@ -23,14 +23,20 @@ class LANComm(threading.Thread):
         
         while not self.killflag:
             (csck,ip)=self.LANsock.accept()
-            dat=csck.recv(128)#listens for password                                                   
+            addorremove=csck.recv(128).decode()
+            csck.send(bytes("1","utf-8"))
+            dat=csck.recv(128).decode()#listens for password                                                   
             if dat==self.password:
-                csck.send(1) #byte this [1 means success else failure                       
+                csck.send(bytes("1","utf-8")) #byte this [1 means success else failure                       
                 #check semd error                                                                                                    
-                dat=csck.recv(128)
+                dat=csck.recv(128).decode()
+                csck.send(bytes("1","utf-8"))
                 #send confirmation                                                                                                   
-                sens=csck.recv(128) #decode to int                                                                           
-                self.mclass.addAddress(dat.decode(),sens)
+                sens=float(csck.recv(128).decode()) #decode to int
+                if addorremove=="add":                                                                         
+                    self.mclass.addLAN(dat,sens)
+                else:
+                    self.mclass.removeAddress(dat)
             csck.close()
        
         self.LANsock.close()
@@ -74,29 +80,31 @@ class AzureComm(threading.Thread):
         #s.send(bytes(password)) #send password,name,maxclients
         s.send("jerry".encode('utf-8'))
         s.recv(128)
-        s.send(str(6).encode('utf-8'))
+        #s.send(str(6).encode('utf-8'))
         #while True:
-        num1=int(s.recv(128).decode())
+        #num1=int(s.recv(128).decode())
 #keep sending negatives to client until appopriate port is selected
             #pass
-        s.send(("1").encode('utf-8'))
-        num2=int(s.recv(128).decode())
-        self.ndcom=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.num1=num1
+        #s.send(("1").encode('utf-8'))
+        #num2=int(s.recv(128).decode())
+        #self.ndcom=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        #self.num1=num1
         #self.ndcom.connect((self.azureip,num1)) ## for alerts
         
-        self.num2=num2
+        #self.num2=num2
         #keep trying until it works
+        self.ndcom=s #new
+        
         while True:
             try:
-                self.addsock.connect((self.azureip,num2))## for adding users
+                self.addsock.connect((self.azureip,self.azureport+1))## for adding users
                 break
             except OSError:
                 continue
         
         
         
-        s.close()
+        #s.close()
     """def addLANUser(self): #may be deprecated
         while True:
             dat=self.LANsock.recv(128)#listens for password                                                   
@@ -122,18 +130,25 @@ class AzureComm(threading.Thread):
         while not self.killflag:
 
             try:
+                addorremove=self.addsock.recv(128).decode()
+                self.addsock.send(bytes("1","utf-8"))
                 dat=self.addsock.recv(128)#listens for password
             except:
-            
-                reconnect(self.addsock,self.azureip,self.num2)
+                self.validatenode()
+                #reconnect(self.addsock,self.azureip,self.num2)
                                                   
             if dat==self.password:
-                self.addsock.send(1) #byte this [1 means success else failure 
+                self.addsock.send(bytes("1","utf-8")) #byte this [1 means success else failure 
                 #check semd error
-                dat=self.addsock.recv(128)
+                dat=self.addsock.recv(128) #Email
                 #send confirmation
-                sens=self.addsock.recv(128) #decode to int
-                mclass.addAddress(dat.decode(),sens)
+                self.addsock.send(bytes("1","utf-8"))
+                sens=float(self.addsock.recv(128).decode()) #sensitivy
+                if addorremove=="add":
+                    mclass.addAzure(dat.decode(),sens)
+                else:
+                    mclass.removeAddress(dat.decode())
+                
             else:
                 self.addsock.send(0)
                 
@@ -141,15 +156,18 @@ class AzureComm(threading.Thread):
             #add them to the list through the main class
             #and send success
             #otherwise, send failure
-    def sendAlert(self,addre,img=None):
-        self.ndcom.connect((self.azureip,self.num1)) ## for alerts
+    def sendAlert(self,addre,img=None): #will use port 6000
+        #self.ndcom.connect((self.azureip,self.num1)) ## for alerts
         self.ndcom.send(addre) #send address (convert)
-        self.ndcom.recv(1)
+        
+        #self.ndcom.recv(1)
+
+        
         #convert, ensure it exists and stuff
-        self.ndcom.send(img)
+        #self.ndcom.send(img)
         #send image, if applicable
         #server should append timestamp
-        self.ndcom.close()
+        #self.ndcom.close()
     def kill(self):
         self.killflag=False
         self.cleanup()

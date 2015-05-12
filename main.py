@@ -9,28 +9,30 @@ import time
 class Main:
     LANintense={}
     Azureintense={}
-    
+    cooladdr=[]
+    cooldowns=[]
     #intensities={}
-    def __init__(self,azureip,azureport,password,handleport,debugflag=False,camnum=0):
+    def __init__(self,azureip,azureport,password,handleport,mailname,mailpass,debugflag=False,camnum=0):
         self.azureip=azureip
         self.azureport=azureport
         self.debugflag=debugflag
         self.devnum=camnum
         self.cooldowns=[]
         self.cooladdr=[]
-        
+        self.mail=Mailer(mailname,mailpass)
         #selfcommclass=Communications(azureip,azureport)
-        self.azcomm=AzureComm(self,handleport,azureip,azureport,password)
+        #self.azcomm=AzureComm(self,handleport,azureip,azureport,password)
         
         self.LANcomm=LANComm(self,handleport,password) #need to make handleports different
         
         try:
-            self.azcomm.validateNode()
+            pass
+            #self.azcomm.validateNode()
         except:
             
             print("Could not validate node on azure")
             raise
-        self.azcomm.start()
+        #self.azcomm.start()
         self.LANcomm.start()
         #start two new thread, addnewuser and 
         
@@ -45,7 +47,7 @@ class Main:
     #        self.intensities[addres]=intens
     #    else:
     #        print("address "+addres+" already exists")
-    def addAzure(aid,intens):
+    def addAzure(self,aid,intens):
         #will either update, or create address with intense
         self.Azureintense[aid]=intens
         
@@ -54,14 +56,15 @@ class Main:
         #else:
         #    print("aid already exists!")
 
-    def addLAN(address,intens):
+    def addLAN(self,address,intens):
     #    if not self.LANintense[address]:
          self.LANintense[address]=intens
     #    else:
     #        print("LAN address already exists!")
     
     def removeAddress(self,address):
-        if address in self.intensities:del self.intensities[address]
+        if address in self.LANintense:del self.LANintense[address]
+        if address in self.Azureintense:del self.Azureintense[address]
     #def removeAzure(self,aid):
     #    if self.Azureintense[aid]:del self.Azureintense[aid]
     #def removeLAN(self,address):
@@ -93,18 +96,20 @@ class Main:
                 print(meanconst)
                 
                 for i in self.LANintense:#LANintense:
-                    if self.LANintense[i]<=meanconst[0] and i not in cooladdr: #these will be scaled by something ofcourse
+                    if self.LANintense[i]<=meanconst[0] and i not in self.cooladdr: #these will be scaled by something ofcourse
                         #start a new thread for this, so it doesn't clog GUI
                         #self.LANcomm.sendLANAlert(i)
                         
                         #self.cooldown.append(time.time())#+5 minutes
                         self.cooladdr.append(i)
-                        threading.Timer(300,removeCooldown,(cooladdr)).start()
+                        threading.Timer(30,self.removeCooldown,(i,)).start() #300 seconds
                         #send email
+                        
+                        threading.Thread(target=self.mail.send_email,args=(i,frame)).start()
                         print("BREAK IN IN PROCESS!")
                 
                 for i in self.Azureintense:
-                    if self.Azureintense[i]<=meanconst and i not in cooladdr: #these will be scaled by something ofcourse
+                    if self.Azureintense[i]<=meanconst and i not in self.cooladdr: #these will be scaled by something ofcourse
 
                         
                         #start a new thread for this, so it doesn't clog GUI
@@ -116,7 +121,7 @@ class Main:
                         #send email
                         #self.cooldown.append(time.time())#+5 minutes deprecated
                         self.cooladdr.append(i)
-                        threading.Timer(300,removeCooldown,(cooladdr)).start()
+                        threading.Timer(300,self.removeCooldown,(self.cooladdr)).start()
                         print("BREAK IN IN PROGRESS")
                 
                 if self.debugflag:
@@ -138,7 +143,7 @@ class Main:
     def removeCooldown(self,addr):
         #multithreaded, handles Queue for when to send emails
         #once current time is 5 minutes past expirey, remove time index as well as respective cooladdr
-        cooladdr.remove(addr)
+        self.cooladdr.remove(addr)
         
 #initialize main
 #if (len(sys.argv)<5):
@@ -153,5 +158,5 @@ ars=ars.split(",")
 print(ars)
 print(sys.argv)
 #m=Main(sys.argv[1],int(sys.argv[2]),passw,sys.argv[3],True,int(sys.argv[4]))
-m=Main(ars[0],int(ars[1]),passw,ars[2],True,int(ars[3]))
+m=Main(ars[0],int(ars[1]),passw,int(ars[2]),ars[4],ars[5],True,int(ars[3]))
 m.captureMotion()

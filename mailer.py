@@ -2,7 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText  # Added
 from email.mime.image import MIMEImage
-
+import cv2
 class Mailer:
     
     def __init__(self,hostaddr,hostpass):
@@ -10,10 +10,12 @@ class Mailer:
         self.hostaddr=hostaddr
     def send_email(self,rec,image):
         import smtplib
-        
-        gmail_user = "serverhomework@gmail.com"#"jimjang.jambles@gmail.com"
-        gmail_pwd = "charleyhorsewheel"#"waterbowl9tube"
-        FROM = gmail_user#'jimjang.jambles@gmail.com'
+        cv2.imwrite(rec+".jpeg",image)
+        f=open(rec+".jpeg","rb")
+        imog=f.read()
+        user = self.hostaddr#"serverhomework@gmail.com"#"jimjang.jambles@gmail.com"
+        pwd = self.hostpass#"charleyhorsewheel"#"waterbowl9tube"
+        FROM = user#'jimjang.jambles@gmail.com'
         TO = rec #must be a list
         SUBJECT = "AMBER HOUSE ALLERT"
         TEXT = 'Your house is being broken into, come back '
@@ -27,7 +29,7 @@ class Mailer:
         
         #msg.preamble="ayyy"
         msg.attach(msgText)
-        img=MIMEImage(image)
+        img=MIMEImage(imog)
         img.add_header("Content-ID","inline",filename="intruder")
         
         msg.attach(img)
@@ -41,7 +43,7 @@ class Mailer:
             server = smtplib.SMTP("smtp.gmail.com", 587) #or port 465 doesn't seem to work!
             server.ehlo()
             server.starttls()
-            server.login(gmail_user, gmail_pwd)
+            server.login(user, pwd)
             server.sendmail(FROM, TO, msg.as_string())
                 #server.quit()
             server.close()
