@@ -50,4 +50,4 @@ class Mailer:
             
         except:
             print ("Error sending alert email!")
-            raise
+            #raise

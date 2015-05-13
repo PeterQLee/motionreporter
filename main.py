@@ -11,6 +11,7 @@ class Main:
     Azureintense={}
     cooladdr=[]
     cooldowns=[]
+    halt=False
     #intensities={}
     def __init__(self,azureip,azureport,password,handleport,mailname,mailpass,debugflag=False,camnum=0):
         self.azureip=azureip
@@ -21,18 +22,19 @@ class Main:
         self.cooladdr=[]
         self.mail=Mailer(mailname,mailpass)
         #selfcommclass=Communications(azureip,azureport)
-        #self.azcomm=AzureComm(self,handleport,azureip,azureport,password)
+        self.azcomm=AzureComm(self,handleport,azureip,azureport,password)#
         
         self.LANcomm=LANComm(self,handleport,password) #need to make handleports different
         
         try:
             pass
-            #self.azcomm.validateNode()
+            self.azcomm.validateNode()#
+            self.azcomm.start()#
         except:
             
             print("Could not validate node on azure")
-            raise
-        #self.azcomm.start()
+            
+       
         self.LANcomm.start()
         #start two new thread, addnewuser and 
         
@@ -69,12 +71,21 @@ class Main:
     #    if self.Azureintense[aid]:del self.Azureintense[aid]
     #def removeLAN(self,address):
     #    if self.LANintense[aid]:del self.LANintense[aid]
-    
+    def haltCapture(self):
+        self.halt=True
+    def resumeCapture(self):
+        self.halt=False
     def captureMotion(self):
         try:
             cam=cv2.VideoCapture(self.devnum)
             
             while True:
+
+                if self.halt:
+                    print("Halted")
+                while self.halt:
+                    time.sleep(10)
+                
                 #capture video
                 ret,frame=cam.read()
 

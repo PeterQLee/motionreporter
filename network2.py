@@ -25,8 +25,13 @@ class LANComm(threading.Thread):
             (csck,ip)=self.LANsock.accept()
             addorremove=csck.recv(128).decode()
             csck.send(bytes("1","utf-8"))
-            dat=csck.recv(128).decode()#listens for password                                                   
-            if dat==self.password:
+            dat=csck.recv(128).decode()#listens for password
+            if dat==self.password and addorremove=="halt":
+                self.mclass.haltCapture()
+                print("halted")#
+            elif dat==self.password and addorremove=="resume":
+                self.mclass.resumeCapture()
+            elif dat==self.password and (addorremove=="add" or addorremove=="remove"):
                 csck.send(bytes("1","utf-8")) #byte this [1 means success else failure                       
                 #check semd error                                                                                                    
                 dat=csck.recv(128).decode()
@@ -64,6 +69,7 @@ class AzureComm(threading.Thread):
         #self.handleport=handleport
         self.password=password
         self.azureip=azureip
+        self.azureport=azureport
         self.killflag=False
         #self.valdiateNode() #maybe add in??
         try:
@@ -79,7 +85,7 @@ class AzureComm(threading.Thread):
         s.connect((self.azureip,self.delegport))
         #s.send(bytes(password)) #send password,name,maxclients
         s.send("jerry".encode('utf-8'))
-        s.recv(128)
+        #s.recv(128)
         #s.send(str(6).encode('utf-8'))
         #while True:
         #num1=int(s.recv(128).decode())
@@ -94,7 +100,7 @@ class AzureComm(threading.Thread):
         #self.num2=num2
         #keep trying until it works
         self.ndcom=s #new
-        
+        print("azureport is",self.azureport)
         while True:
             try:
                 self.addsock.connect((self.azureip,self.azureport+1))## for adding users
@@ -134,10 +140,13 @@ class AzureComm(threading.Thread):
                 self.addsock.send(bytes("1","utf-8"))
                 dat=self.addsock.recv(128)#listens for password
             except:
-                self.validatenode()
+                self.validateNode()
                 #reconnect(self.addsock,self.azureip,self.num2)
-                                                  
-            if dat==self.password:
+            if dat==self.password and addorremove=="halt":
+                self.mclass.haltCapture()
+            elif dat==self.password and addorremove=="resume":
+                self.mclass.resumeCapture()
+            elif dat==self.password:
                 self.addsock.send(bytes("1","utf-8")) #byte this [1 means success else failure 
                 #check semd error
                 dat=self.addsock.recv(128) #Email
@@ -150,7 +159,7 @@ class AzureComm(threading.Thread):
                     mclass.removeAddress(dat.decode())
                 
             else:
-                self.addsock.send(0)
+                self.addsock.send(bytes("0","utf-8"))
                 
             #if these are correct
             #add them to the list through the main class
