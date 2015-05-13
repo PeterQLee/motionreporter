@@ -140,7 +140,8 @@ class Main:
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
             cam.release()
-            cv2.destroyAllWindows()
+            if self.debugflag:
+                cv2.destroyAllWindows()
             #self.azcomm.kill()
             self.LANcomm.kill()
                         
@@ -149,7 +150,8 @@ class Main:
             #if this fails for some reason, send signal to all dependent devices
             print("Error in main capture")
             cam.release()
-            cv2.destroyAllWindows()
+            if self.debugflag:
+                cv2.destroyAllWindows()
             raise
     def removeCooldown(self,addr):
         #multithreaded, handles Queue for when to send emails
