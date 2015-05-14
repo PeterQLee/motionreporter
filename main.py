@@ -120,7 +120,8 @@ class Main:
                         print("BREAK IN IN PROCESS!")
                 
                 for i in self.Azureintense:
-                    if self.Azureintense[i]<=meanconst and i not in self.cooladdr: #these will be scaled by something ofcourse
+                    print( "az"+str(i))
+                    if self.Azureintense[i]<=meanconst[0] and i not in self.cooladdr: #these will be scaled by something ofcourse
 
                         
                         #start a new thread for this, so it doesn't clog GUI
@@ -128,11 +129,14 @@ class Main:
                         #make sure ample time after detection
                         #also make sure email hasn't been sent in last 5 minutes 
                         
-                        self.azcomm.sendAlert(i)
+                        #self.azcomm.sendAlert(i) TEMP
+
+                        
                         #send email
                         #self.cooldown.append(time.time())#+5 minutes deprecated
                         self.cooladdr.append(i)
                         threading.Timer(300,self.removeCooldown,(self.cooladdr)).start()
+                        threading.Thread(target=self.mail.send_email,args=(i,frame)).start()
                         print("BREAK IN IN PROGRESS")
                 
                 if self.debugflag:

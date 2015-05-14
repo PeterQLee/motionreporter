@@ -24,8 +24,10 @@ class LANComm(threading.Thread):
         while not self.killflag:
             (csck,ip)=self.LANsock.accept()
             addorremove=csck.recv(128).decode()
+           
             csck.send(bytes("1","utf-8"))
             dat=csck.recv(128).decode()#listens for password
+            
             if dat==self.password and addorremove=="halt":
                 self.mclass.haltCapture()
                 print("halted")#
@@ -35,6 +37,7 @@ class LANComm(threading.Thread):
                 csck.send(bytes("1","utf-8")) #byte this [1 means success else failure                       
                 #check semd error                                                                                                    
                 dat=csck.recv(128).decode()
+                
                 csck.send(bytes("1","utf-8"))
                 #send confirmation                                                                                                   
                 sens=float(csck.recv(128).decode()) #decode to int
@@ -42,6 +45,8 @@ class LANComm(threading.Thread):
                     self.mclass.addLAN(dat,sens)
                 else:
                     self.mclass.removeAddress(dat)
+            else:
+                csck.send(bytes("0","utf-8"))
             csck.close()
        
         self.LANsock.close()
@@ -138,7 +143,7 @@ class AzureComm(threading.Thread):
             try:
                 addorremove=self.addsock.recv(128).decode()
                 self.addsock.send(bytes("1","utf-8"))
-                dat=self.addsock.recv(128)#listens for password
+                dat=self.addsock.recv(128).decode()#listens for password
             except:
                 self.validateNode()
                 #reconnect(self.addsock,self.azureip,self.num2)
@@ -154,9 +159,9 @@ class AzureComm(threading.Thread):
                 self.addsock.send(bytes("1","utf-8"))
                 sens=float(self.addsock.recv(128).decode()) #sensitivy
                 if addorremove=="add":
-                    mclass.addAzure(dat.decode(),sens)
+                    self.mclass.addAzure(dat.decode(),sens)
                 else:
-                    mclass.removeAddress(dat.decode())
+                    self.mclass.removeAddress(dat.decode())
                 
             else:
                 self.addsock.send(bytes("0","utf-8"))
