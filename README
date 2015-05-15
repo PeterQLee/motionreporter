@@ -1,0 +1,14 @@
+To run this program, you must have at least python 3.4 installed and openCV. Be sure all the required packages are installed and that python has access to the opencv library. (you can test if the installation was successful by typing python3 -c "import cv2").
+
+The settings file goes in the following order in comma seperated format...
+1,2,3,4,5,6
+
+1. address of your main server.
+2. port for your main server (be sure this port and the next port (e.g. 6000 and 6001) are open)
+3. the port for adding addresses locally if you chose not to use a main server setup (You can add addresses with addLAN.py)
+4,5: your address and password for sending email notifications
+6. your desired name for this camera
+
+Lastly to run this, type python3 main.py, or mainpi.py if you don't want to run with GUI.
+
+Be sure to remember your chosen password for adding your own addresses!
