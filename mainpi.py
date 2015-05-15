@@ -169,6 +169,12 @@ f=open("settings","r")
 ars=f.read()
 
 ars=ars.split(",")
+for i in range(len(ars)):
+    #remove whitespaces
+    ars[i]=ars[i].replace("\n","")
+    ars[i]=ars[i].replace(" ","")
+    ars[i]=ars[i].replace("\r","")
+    ars[i]=ars[i].replace("\t","")
 print(ars)
 print(sys.argv)
 #m=Main(sys.argv[1],int(sys.argv[2]),passw,sys.argv[3],True,int(sys.argv[4]))
