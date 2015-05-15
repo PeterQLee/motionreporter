@@ -135,7 +135,7 @@ class Main:
                         #send email
                         #self.cooldown.append(time.time())#+5 minutes deprecated
                         self.cooladdr.append(i)
-                        threading.Timer(300,self.removeCooldown,(self.cooladdr)).start()
+                        threading.Timer(30,self.removeCooldown,(self.cooladdr)).start()
                         threading.Thread(target=self.mail.send_email,args=(i,frame)).start()
                         print("BREAK IN IN PROGRESS")
                 

@@ -13,7 +13,7 @@ class Main:
     cooldowns=[]
     halt=False
     #intensities={}
-    def __init__(self,azureip,azureport,password,handleport,mailname,mailpass,debugflag=False,camnum=0):
+    def __init__(self,azureip,azureport,password,handleport,mailname,mailpass,name,debugflag=False,camnum=0):
         self.azureip=azureip
         self.azureport=azureport
         self.debugflag=debugflag
@@ -22,7 +22,7 @@ class Main:
         self.cooladdr=[]
         self.mail=Mailer(mailname,mailpass)
         #selfcommclass=Communications(azureip,azureport)
-        self.azcomm=AzureComm(self,handleport,azureip,azureport,password)#
+        self.azcomm=AzureComm(self,handleport,azureip,azureport,password,name)#
         
         self.LANcomm=LANComm(self,handleport,password) #need to make handleports different
         
@@ -129,13 +129,13 @@ class Main:
                         #make sure ample time after detection
                         #also make sure email hasn't been sent in last 5 minutes 
                         
-                        #self.azcomm.sendAlert(i) TEMP
+                        self.azcomm.sendAlert(i) 
 
                         
                         #send email
                         #self.cooldown.append(time.time())#+5 minutes deprecated
                         self.cooladdr.append(i)
-                        threading.Timer(300,self.removeCooldown,(self.cooladdr)).start()
+                        threading.Timer(30,self.removeCooldown,(self.cooladdr)).start()
                         threading.Thread(target=self.mail.send_email,args=(i,frame)).start()
                         print("BREAK IN IN PROGRESS")
                 
@@ -143,12 +143,13 @@ class Main:
                     cv2.imshow('frame',disp)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
+                
             cam.release()
             if self.debugflag:
                 cv2.destroyAllWindows()
             #self.azcomm.kill()
             self.LANcomm.kill()
-                        
+            self.azcomm.kill()            
             #if 
         except:
             #if this fails for some reason, send signal to all dependent devices
@@ -156,6 +157,8 @@ class Main:
             cam.release()
             if self.debugflag:
                 cv2.destroyAllWindows()
+            self.LANcomm.kill()
+            self.azcomm.kill()
             raise
     def removeCooldown(self,addr):
         #multithreaded, handles Queue for when to send emails
@@ -175,5 +178,5 @@ ars=ars.split(",")
 print(ars)
 print(sys.argv)
 #m=Main(sys.argv[1],int(sys.argv[2]),passw,sys.argv[3],True,int(sys.argv[4]))
-m=Main(ars[0],int(ars[1]),passw,int(ars[2]),ars[4],ars[5],True,int(ars[3]))
+m=Main(ars[0],int(ars[1]),passw,int(ars[2]),ars[4],ars[5],ars[6],True,int(ars[3]))
 m.captureMotion()

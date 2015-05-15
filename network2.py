@@ -142,9 +142,11 @@ class AzureComm(threading.Thread):
         while not self.killflag:
 
             try:
+                
                 addorremove=self.addsock.recv(128).decode()
                 self.addsock.send(bytes("1","utf-8"))
                 dat=self.addsock.recv(128).decode()#listens for password
+                print("inc "+addorremove+" "+dat)
             except:
                 #self.validateNode()
                 #reconnect(self.addsock,self.azureip,self.num2)

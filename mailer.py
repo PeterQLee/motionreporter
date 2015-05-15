@@ -17,8 +17,8 @@ class Mailer:
         pwd = self.hostpass#"charleyhorsewheel"#"waterbowl9tube"
         FROM = user#'jimjang.jambles@gmail.com'
         TO = rec #must be a list
-        SUBJECT = "AMBER HOUSE ALLERT"
-        TEXT = 'Your house is being broken into, come back '
+        SUBJECT = "HOUSE BREAKIN ALERT"
+        TEXT = 'Your house is possibly being broken into, come back '
         msg=MIMEMultipart()
         msgText=MIMEText(TEXT)
         msg["To"]=TO
