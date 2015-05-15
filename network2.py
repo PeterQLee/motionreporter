@@ -23,6 +23,7 @@ class LANComm(threading.Thread):
         
         while not self.killflag:
             (csck,ip)=self.LANsock.accept()
+            if self.killflag:break
             addorremove=csck.recv(128).decode()
            
             csck.send(bytes("1","utf-8"))
@@ -57,7 +58,7 @@ class LANComm(threading.Thread):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         
         self.killflag=True
-        s.connect(("127.0.0.1",6102))
+        s.connect(("127.0.0.1",6101))
         s.send(bytes(1))
         s.close()
        
@@ -67,10 +68,10 @@ class AzureComm(threading.Thread):
     ndcom=None
     addsock=None
     LANsock=None
-    def __init__(self,mclass,handleport,azureip,azureport,password):
+    def __init__(self,mclass,handleport,azureip,azureport,password,name):
         threading.Thread.__init__(self)
         self.mclass=mclass
-        
+        self.name=name
         #self.handleport=handleport
         self.password=password
         self.azureip=azureip
@@ -89,7 +90,7 @@ class AzureComm(threading.Thread):
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.connect((self.azureip,self.delegport))
         #s.send(bytes(password)) #send password,name,maxclients
-        s.send("jerry".encode('utf-8'))
+        s.send(bytes(self.name,'utf-8'))
         #s.recv(128)
         #s.send(str(6).encode('utf-8'))
         #while True:
@@ -145,8 +146,9 @@ class AzureComm(threading.Thread):
                 self.addsock.send(bytes("1","utf-8"))
                 dat=self.addsock.recv(128).decode()#listens for password
             except:
-                self.validateNode()
+                #self.validateNode()
                 #reconnect(self.addsock,self.azureip,self.num2)
+                break
             if dat==self.password and addorremove=="halt":
                 self.mclass.haltCapture()
             elif dat==self.password and addorremove=="resume":
@@ -172,7 +174,8 @@ class AzureComm(threading.Thread):
             #otherwise, send failure
     def sendAlert(self,addre,img=None): #will use port 6000
         #self.ndcom.connect((self.azureip,self.num1)) ## for alerts
-        self.ndcom.send(addre) #send address (convert)
+        print("Sending alert!")
+        self.ndcom.send(bytes(self.name,"utf-8")) #send address (convert)
         
         #self.ndcom.recv(1)
 
